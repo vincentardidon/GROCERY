@@ -1,16 +1,40 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import React from 'react';
-import { useColorScheme } from 'react-native';
+import { Stack } from "expo-router";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, View } from "react-native";
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { initializeExpenseDatabase } from "../database/database";
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
-  );
+export default function RootLayout() {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    async function prepareDatabase() {
+      try {
+        await initializeExpenseDatabase();
+      } catch (error) {
+        console.error("Failed to initialize expense database:", error);
+      } finally {
+        setReady(true);
+      }
+    }
+
+    prepareDatabase();
+  }, []);
+
+  if (!ready) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#F8F7F0",
+        }}
+      >
+        <ActivityIndicator size="large" color="#245C43" />
+      </View>
+    );
+  }
+
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
